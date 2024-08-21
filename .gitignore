@@ -1,3 +1,4 @@
+
 # Gradle files
 .gradle/
 build/
@@ -21,6 +22,12 @@ output.json
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
 
 # Keystore files
 *.jks
@@ -31,3 +38,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# OS specific 
+.DS_Store
