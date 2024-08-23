@@ -1,6 +1,5 @@
 package com.example.projekat_rmas.components
 
-import android.inputmethodservice.Keyboard
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,8 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -86,12 +83,12 @@ fun HeadingTextComponent(value: String){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TextFieldComponent(labelValue: String, painterResource: Painter){
-
-    val textValue = remember { //ako korisnik upise nesto u text polje a zatim obrise i ponov upise zbog remember se pamti to!
-        mutableStateOf("")
-    }
-
+fun TextFieldComponent(
+    labelValue: String,
+    painterResource: Painter,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
@@ -106,27 +103,26 @@ fun TextFieldComponent(labelValue: String, painterResource: Painter){
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         singleLine = true,
         maxLines = 1,
-        value = textValue.value,  // Pass the actual string value
-        onValueChange = {
-            textValue.value = it // Update the mutable state
-        },
+        value = value,
+        onValueChange = onValueChange,
         leadingIcon = {
             Icon(
                 painter = painterResource,
                 contentDescription = "",
-                modifier = Modifier.padding(16.dp))
+                modifier = Modifier.padding(16.dp)
+            )
         }
-
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PasswordTextFieldComponent(labelValue: String, painterResource: Painter){
-    val password = remember {
-        mutableStateOf("")
-    }
-
+fun PasswordTextFieldComponent(
+    labelValue: String,
+    painterResource: Painter,
+    value: String,  // Dodajemo value kao parametar
+    onValueChange: (String) -> Unit  // Dodajemo onValueChange kao parametar
+) {
     val localFocusManager = LocalFocusManager.current
 
     OutlinedTextField(
@@ -146,19 +142,19 @@ fun PasswordTextFieldComponent(labelValue: String, painterResource: Painter){
         keyboardActions = KeyboardActions {
             localFocusManager.clearFocus()
         },
-        value = password.value,
-        onValueChange = {
-            password.value = it
-        },
+        value = value,
+        onValueChange = onValueChange,
         leadingIcon = {
             Icon(
                 painter = painterResource,
                 contentDescription = "",
-                modifier = Modifier.padding(16.dp))
+                modifier = Modifier.padding(16.dp)
+            )
         },
         visualTransformation = PasswordVisualTransformation()
     )
 }
+
 
 @Composable
 fun ButtonComponent(value: String, onClick: () -> Unit) {

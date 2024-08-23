@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -16,8 +17,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,8 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
@@ -39,12 +42,21 @@ import com.example.projekat_rmas.components.HeadingTextComponent
 import com.example.projekat_rmas.components.TextFieldComponent
 import com.example.projekat_rmas.components.NormalTextComponent
 import com.example.projekat_rmas.components.PasswordTextFieldComponent
+import com.example.projekat_rmas.viewmodel.AuthViewModel
+import com.example.projekat_rmas.viewmodel.RegistrationState
 
 @Composable
-fun SignUpScreen(navController: NavHostController) {
+fun SignUpScreen(navController: NavHostController, viewModel: AuthViewModel) {
 
-    // Stanje za odabranu sliku
+    var username by remember { mutableStateOf("")}
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var fullname by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val registrationState = viewModel.registrationState
+    val context = LocalContext.current
 
     // Kreiramo launcher za biranje slike iz galerije
     val launcher = rememberLauncherForActivityResult(
@@ -68,26 +80,37 @@ fun SignUpScreen(navController: NavHostController) {
             NormalTextComponent(value = "Hey there")
             HeadingTextComponent(value = "Create an account")
             Spacer(modifier = Modifier.height(20.dp))
+
             TextFieldComponent(
                 labelValue = "Username",
-                painterResource(id = R.drawable.profile)
-
+                painterResource(id = R.drawable.profile),
+                value = username,
+                onValueChange = {username = it}
             )
             TextFieldComponent(
                 labelValue = "Fullname",
-                painterResource = painterResource(id = R.drawable.profile)
+                painterResource = painterResource(id = R.drawable.profile),
+                value = fullname,
+                onValueChange = {fullname = it}
             )
             TextFieldComponent(
                 labelValue = "Email",
-                painterResource = painterResource(id = R.drawable.email)
+                painterResource = painterResource(id = R.drawable.email),
+                value = email,
+                onValueChange = { email = it }
             )
+
             TextFieldComponent(
                 labelValue = "Phone",
-                painterResource = painterResource(id = R.drawable.phone)
+                painterResource = painterResource(id = R.drawable.phone),
+                value = phoneNumber,
+                onValueChange = {phoneNumber = it}
             )
             PasswordTextFieldComponent(
                 labelValue = "Password",
-                painterResource = painterResource(id = R.drawable.password)
+                painterResource = painterResource(id = R.drawable.password) ,
+                value = password,
+                onValueChange = {password = it}
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -113,16 +136,69 @@ fun SignUpScreen(navController: NavHostController) {
                 }
             }
 
-
             Spacer(modifier = Modifier.height(20.dp))
+
+
 
             ButtonComponent(value = "Register", onClick = {
-                // Ovde možeš dodati akciju za registraciju
-                // Ako trenutno nema akcije, ostavi praznu lambdu
+                val usernameError = viewModel.validateUsername(username)
+                val fullnameError = viewModel.validateFullName(fullname)
+                val phoneNumberError = viewModel.validatePhoneNumber(phoneNumber)
+                val emailError = viewModel.validateEmail(email)
+                val passwordError = viewModel.validatePassword(password)
+                val imageError = viewModel.validateImage(selectedImageUri)
+
+                when {
+                    usernameError != null -> {
+                        Toast.makeText(context, usernameError, Toast.LENGTH_SHORT).show()
+                    }
+                    fullnameError != null -> {
+                        Toast.makeText(context, fullnameError, Toast.LENGTH_SHORT).show()
+                    }
+                    phoneNumberError != null -> {
+                        Toast.makeText(context, phoneNumberError, Toast.LENGTH_SHORT).show()
+                    }
+                    emailError != null -> {
+                        Toast.makeText(context, emailError, Toast.LENGTH_SHORT).show()
+                    }
+                    passwordError != null -> {
+                        Toast.makeText(context, passwordError, Toast.LENGTH_SHORT).show()
+                    }
+                    imageError != null -> {
+                        Toast.makeText(context, imageError, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        // Sve validacije su prošle, pokreće se registracija
+                        viewModel.registerUser(username, email, password,fullname, phoneNumber, selectedImageUri)
+                    }
+                }
             })
 
-            Spacer(modifier = Modifier.height(20.dp))
+            when (registrationState) {
+                is RegistrationState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }                is RegistrationState.Success -> {
+                    LaunchedEffect(Unit) {
+                        Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+                        navController.navigate("login")
+                    }
 
+                }
+                is RegistrationState.Error -> {
+                    val errorMessage = (registrationState as RegistrationState.Error).message
+                    LaunchedEffect(Unit) {
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                else -> Unit
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
             DividerTextComponent()
 
             ClickableLoginTextComponent (tryingToLogin = true, onTextSelected = {
