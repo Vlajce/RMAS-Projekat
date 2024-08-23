@@ -69,7 +69,13 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    //za biranje slika iz galerije
+    implementation("io.coil-kt:coil-compose:2.1.0")
+    //navigation
+    implementation ("androidx.navigation:navigation-compose:2.5.3")
+    implementation ("androidx.compose.material3:material3:<latest_version>")
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-auth-ktx")
     // Google Maps Compose library
     val mapsComposeVersion = "4.4.2"
     implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
