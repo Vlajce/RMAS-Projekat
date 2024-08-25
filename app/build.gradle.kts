@@ -81,11 +81,17 @@ dependencies {
     implementation ("com.google.firebase:firebase-storage:20.0.0")
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth-ktx")
+
+    //Google maps
+    implementation ("com.google.android.gms:play-services-maps:18.0.0")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+
+
     // Google Maps Compose library
-    val mapsComposeVersion = "4.4.2"
-    implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
+    //val mapsComposeVersion = "4.4.2"
+    //implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
     // Google Maps Compose utility library
-    implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
+    //implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
     // Google Maps Compose widgets library
-    implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
+    //implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
 }

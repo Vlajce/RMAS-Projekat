@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projekat_rmas.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {

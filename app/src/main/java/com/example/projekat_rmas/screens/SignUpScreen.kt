@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.Surface
@@ -68,12 +71,13 @@ fun SignUpScreen(navController: NavHostController, viewModel: AuthViewModel) {
         }
     }
 
-    Surface(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(28.dp)
-    ){
+            .verticalScroll(rememberScrollState())
+            .padding(28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -138,8 +142,6 @@ fun SignUpScreen(navController: NavHostController, viewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-
-
             ButtonComponent(value = "Register", onClick = {
                 val usernameError = viewModel.validateUsername(username)
                 val fullnameError = viewModel.validateFullName(fullname)
@@ -180,14 +182,17 @@ fun SignUpScreen(navController: NavHostController, viewModel: AuthViewModel) {
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
+                        Spacer(modifier = Modifier.height(10.dp))
                         CircularProgressIndicator()
                     }
-                }                is RegistrationState.Success -> {
+                }
+                is RegistrationState.Success -> {
                     LaunchedEffect(Unit) {
                         Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-                        navController.navigate("login")
+                        navController.navigate("main_screen") {
+                            popUpTo("signup") { inclusive = true }
+                        }
                     }
-
                 }
                 is RegistrationState.Error -> {
                     val errorMessage = (registrationState as RegistrationState.Error).message

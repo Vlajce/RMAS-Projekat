@@ -34,10 +34,13 @@ import com.example.projekat_rmas.components.TextFieldComponent
 import com.example.projekat_rmas.viewmodel.AuthViewModel
 import com.example.projekat_rmas.viewmodel.RegistrationState
 
+
+//Mozda da se popravi da bude responsive, ali se ne vidi da nije jer zauzima malo mesta (ako stignem)
 @Composable
 fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel){
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
     val loginState = viewModel.registrationState
     val context = LocalContext.current
 
@@ -90,7 +93,9 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel){
                 is RegistrationState.Success -> {
                     LaunchedEffect(Unit) {
                         Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                        navController.navigate("mainScreen")
+                        navController.navigate("main_screen") {
+                            popUpTo("login") { inclusive = true } //uklanjanje svega sa stack-a do login-a pa i njega
+                        }
                     }
                 }
                 is RegistrationState.Error -> {

@@ -12,11 +12,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,9 +52,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
+import androidx.navigation.NavHostController
 import com.example.projekat_rmas.ui.theme.BgColor
 import com.example.projekat_rmas.ui.theme.GrayColor
 import com.example.projekat_rmas.ui.theme.Secondary
+import okhttp3.internal.wait
 
 @Composable
 fun NormalTextComponent(value: String){
@@ -191,11 +201,11 @@ fun DividerTextComponent(){
         Divider(modifier = Modifier
             .fillMaxWidth()
             .weight(1f),
-        color = GrayColor,
+            color = GrayColor,
             thickness = 1.dp)
 
         Text(modifier = Modifier.padding(8.dp), text =  "or", fontSize = 20.sp, color = TextColor)
-        
+
         Divider(modifier = Modifier
             .fillMaxWidth()
             .weight(1f),
@@ -229,15 +239,85 @@ fun ClickableLoginTextComponent(tryingToLogin: Boolean = true, onTextSelected: (
         ),
         text = annotatedString, onClick = { offset ->
 
-        annotatedString.getStringAnnotations(offset, offset)
-            .firstOrNull()?.also{ span ->
-                Log.d("ClickableTextComponent", "{${span.item}}")
+            annotatedString.getStringAnnotations(offset, offset)
+                .firstOrNull()?.also{ span ->
+                    Log.d("ClickableTextComponent", "{${span.item}}")
 
-                if((span.item == loginText)){
-                    onTextSelected(span.item)
+                    if((span.item == loginText)){
+                        onTextSelected(span.item)
+                    }
                 }
-            }
-    })
+        })
+}
+
+@Composable
+fun BottomNavigationBar(navController: NavHostController) {
+
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = Color.White
+    ) {
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Main") },
+            label = { Text("Main") },
+            selected = currentRoute == "main_screen",
+            onClick = {
+                if (currentRoute != "main_screen") {
+                    navController.navigate("main_screen") {
+                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
+                        launchSingleTop = true
+                    }
+                }
+            } ,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Map") },
+            label = { Text("Map") },
+            selected = currentRoute == "map_screen",
+            onClick = {
+                if (currentRoute != "map_screen") {
+                    navController.navigate("map_screen") {
+                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
+                        launchSingleTop = true
+                    }
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Star, contentDescription = "Leaderboard") },
+            label = { Text("Leaderboard") },
+            selected = currentRoute == "leaderboard_screen",
+            onClick = {
+                if (currentRoute != "leaderboard_screen") {
+                    navController.navigate("leaderboard_screen") {
+                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
+                        launchSingleTop = true
+                    }
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray
+            )
+        )
+    }
 }
 
 

@@ -4,8 +4,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.projekat_rmas.repository.AuthRepository
+import com.example.projekat_rmas.screens.LeaderboardScreen
 import com.example.projekat_rmas.screens.LoginScreen
 import com.example.projekat_rmas.screens.MainScreen
+import com.example.projekat_rmas.screens.MapScreen
 import com.example.projekat_rmas.screens.SignUpScreen
 import com.example.projekat_rmas.viewmodel.AuthViewModel
 import com.example.projekat_rmas.viewmodel.AuthViewModelFactory
@@ -18,16 +20,23 @@ fun MainApp() {
         factory = AuthViewModelFactory(authRepository)
     )
 
-    NavHost(navController = navController, startDestination = "signup") {
+    NavHost(navController = navController, startDestination = "login") {
         composable("signup") {
             SignUpScreen(navController, viewModel = viewModel)
         }
         composable("login") {
             LoginScreen(navController, viewModel = viewModel)
         }
-        composable("mainScreen") {
-            MainScreen()
+        composable("main_screen") {
+            MainScreen(navController)
+        }
+        composable("map_screen") {
+            MapScreen(navController)
+        }
+        composable("leaderboard_screen") {
+            LeaderboardScreen(navController)
         }
     }
 }
+
 
