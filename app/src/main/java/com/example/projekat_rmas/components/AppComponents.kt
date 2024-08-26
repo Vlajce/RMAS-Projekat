@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.navigation.NavHostController
+import com.example.projekat_rmas.R
 import com.example.projekat_rmas.ui.theme.BgColor
 import com.example.projekat_rmas.ui.theme.GrayColor
 import com.example.projekat_rmas.ui.theme.Secondary
@@ -261,7 +264,7 @@ fun BottomNavigationBar(navController: NavHostController) {
     ) {
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Main") },
+            icon = { Icon(Icons.Default.Home, contentDescription = "Main", modifier = Modifier.size(24.dp)) },
             label = { Text("Main") },
             selected = currentRoute == "main_screen",
             onClick = {
@@ -280,7 +283,7 @@ fun BottomNavigationBar(navController: NavHostController) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Map") },
+            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Map", modifier = Modifier.size(24.dp)) },
             label = { Text("Map") },
             selected = currentRoute == "map_screen",
             onClick = {
@@ -299,7 +302,26 @@ fun BottomNavigationBar(navController: NavHostController) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Star, contentDescription = "Leaderboard") },
+            icon = { Icon(painter = painterResource(id = R.drawable.table), contentDescription = "Table", modifier = Modifier.size(24.dp)) },
+            label = { Text("Table") },
+            selected = currentRoute == "table_screen",
+            onClick = {
+                if (currentRoute != "table_screen") {
+                    navController.navigate("table_screen") {
+                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
+                        launchSingleTop = true
+                    }
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(painter = painterResource(id = R.drawable.leaderboard), contentDescription = "Leaderboard", modifier = Modifier.size(24.dp)) },
             label = { Text("Leaderboard") },
             selected = currentRoute == "leaderboard_screen",
             onClick = {

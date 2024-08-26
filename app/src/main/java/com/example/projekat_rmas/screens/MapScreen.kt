@@ -6,22 +6,23 @@ import android.content.pm.PackageManager
 import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.Text
+import androidx.activity.result.launch
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.projekat_rmas.components.BottomNavigationBar
+import com.example.projekat_rmas.repository.FirebaseRepo
+import com.example.projekat_rmas.viewmodel.ObjectState
+import com.example.projekat_rmas.viewmodel.ObjectViewModel
+import com.example.projekat_rmas.viewmodel.ObjectViewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,7 +32,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
 @Composable
-fun MapScreen(navController: NavHostController) {
+fun MapScreen(
+    navController: NavHostController,
+    objectViewModel: ObjectViewModel = viewModel(factory = ObjectViewModelFactory(FirebaseRepo()))
+) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val mapView = remember { MapView(context) }
@@ -41,16 +45,21 @@ fun MapScreen(navController: NavHostController) {
     var locationErrorMessage by remember { mutableStateOf<String?>(null) }
     var isMapReady by remember { mutableStateOf(false) }
 
+    var showAddObjectDialog by remember { mutableStateOf(false) }
+
+    // Pokretanje dohvaćanja objekata na početku
+    LaunchedEffect(Unit) {
+        objectViewModel.fetchAllObjects()
+    }
+
     // Inicijalizacija ActivityResultLauncher-a za traženje dozvola
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Kada je dozvola dodeljena, započni dobijanje lokacije
             startLocationUpdates(context, fusedLocationClient) { location ->
                 if (location != null) {
                     currentLocation = location
-                    // Ako je mapa spremna, centriraj kameru na trenutnu lokaciju
                     if (isMapReady) {
                         googleMap?.moveCamera(
                             CameraUpdateFactory.newLatLngZoom(
@@ -69,23 +78,19 @@ fun MapScreen(navController: NavHostController) {
         }
     }
 
-    // Provera da li je dozvola već dodeljena
     val hasLocationPermission = remember {
         ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    // Pokrećemo zahtev za dozvolu ako nije dodeljena
     LaunchedEffect(hasLocationPermission) {
         if (!hasLocationPermission) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            // Ako je dozvola već dodeljena, odmah započni dobijanje lokacije
             startLocationUpdates(context, fusedLocationClient) { location ->
                 if (location != null) {
                     currentLocation = location
-                    // Ako je mapa spremna, centriraj kameru na trenutnu lokaciju
                     if (isMapReady) {
                         googleMap?.moveCamera(
                             CameraUpdateFactory.newLatLngZoom(
@@ -94,7 +99,6 @@ fun MapScreen(navController: NavHostController) {
                         )
                         googleMap?.isMyLocationEnabled = true
                         googleMap?.uiSettings?.isMyLocationButtonEnabled = true
-
                     }
                 }
             }
@@ -104,44 +108,139 @@ fun MapScreen(navController: NavHostController) {
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            // AndroidView za prikaz mape
-            AndroidView(
-                factory = { mapView.apply { onCreate(null); onResume() } },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                update = { view ->
-                    // Inicijalizacija mape
-                    view.getMapAsync { map ->
-                        googleMap = map
-                        isMapReady = true
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+            contentAlignment = Alignment.TopCenter
 
-                        // Omogući dugme za centriranje lokacije
-                        if (ContextCompat.checkSelfPermission(
-                                context, Manifest.permission.ACCESS_FINE_LOCATION
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            googleMap?.isMyLocationEnabled = true
-                            googleMap?.uiSettings?.isMyLocationButtonEnabled = true
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Dugmići za prikaz filtera i dodavanje objekta
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp), // Odvojenost od ivica
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = { /* Logika za prikaz filtera */ },
+                        modifier = Modifier
+                            .weight(1f) // Daje jednak prostor svakom dugmetu
+                            .padding(end = 8.dp) // Padding između dugmića
+                            .height(56.dp) // Visina dugmeta
+                    ) {
+                        Text("Show Filters")
+                    }
+
+                    Button(
+                        onClick = { showAddObjectDialog = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 8.dp)
+                            .height(56.dp)
+                    ) {
+                        Text("Add Object")
+                    }
+                }
+
+                // AndroidView za prikaz mape ispod dugmića
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    AndroidView(
+                        factory = { mapView.apply { onCreate(null); onResume() } },
+                        modifier = Modifier.fillMaxSize(),
+                        update = { view ->
+                            view.getMapAsync { map ->
+                                googleMap = map
+                                isMapReady = true
+
+                                if (ContextCompat.checkSelfPermission(
+                                        context, Manifest.permission.ACCESS_FINE_LOCATION
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    googleMap?.isMyLocationEnabled = true
+                                    googleMap?.uiSettings?.isMyLocationButtonEnabled = true
+                                }
+
+                                currentLocation?.let { location ->
+                                    val userLocation = LatLng(location.latitude, location.longitude)
+                                    googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15f))
+                                }
+
+                                // Prikazivanje markera za sve objekte na mapi
+                                if (objectViewModel.objectState is ObjectState.ObjectsFetched) {
+                                    val objects = (objectViewModel.objectState as ObjectState.ObjectsFetched).objects
+                                    objects.forEach { mapObject ->
+                                        val objectLocation = LatLng(mapObject.latitude, mapObject.longitude)
+                                        googleMap?.addMarker(MarkerOptions().position(objectLocation).title(mapObject.title))
+                                    }
+                                }
+                            }
                         }
+                    )
+                }
+            }
 
-                        // Ako je lokacija već dostupna, centriraj kameru na nju
+            // Prikazivanje dijaloga za dodavanje objekta
+            if (showAddObjectDialog) {
+                AddObjectDialog(
+                    onDismiss = { showAddObjectDialog = false },
+                    onSave = { title, subject, description, selectedImageUri ->
                         currentLocation?.let { location ->
-                            val userLocation = LatLng(location.latitude, location.longitude)
-                            googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15f))
+                            objectViewModel.addObject(
+                                title = title,
+                                subject = subject,
+                                description = description,
+                                locationLat = location.latitude,
+                                locationLng = location.longitude,
+                                imageUri = selectedImageUri
+                            )
+                            showAddObjectDialog = false
                         }
                     }
-                },
-                // Upravljanje životnim ciklusom mape
-                onReset = {
-                    mapView.onPause()
-                    mapView.onStop()
-                    mapView.onDestroy()
-                }
-            )
+                )
+            }
 
-            // Prikazivanje greške ako postoji
+            when (val state = objectViewModel.objectState) {
+                is ObjectState.Loading -> {
+                    // Prikaz loading indikatora
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is ObjectState.Success -> {
+                    Snackbar(
+                        modifier = Modifier.padding(16.dp),
+                        action = {
+                            TextButton(onClick = { objectViewModel.resetState() }) {
+                                Text("OK")
+                            }
+                        }
+                    ) {
+                        Text(text = "Object added successfully!")
+                    }
+                }
+                is ObjectState.Error -> {
+                    Snackbar(
+                        modifier = Modifier.padding(16.dp),
+                        action = {
+                            TextButton(onClick = { objectViewModel.resetState() }) {
+                                Text("OK")
+                            }
+                        }
+                    ) {
+                        Text(text = state.message)
+                    }
+                }
+                else -> {}
+            }
+
             locationErrorMessage?.let { message ->
                 Snackbar(
                     modifier = Modifier
@@ -154,6 +253,8 @@ fun MapScreen(navController: NavHostController) {
         }
     }
 }
+
+
 
 // Funkcija za dobijanje trenutne lokacije
 private fun startLocationUpdates(

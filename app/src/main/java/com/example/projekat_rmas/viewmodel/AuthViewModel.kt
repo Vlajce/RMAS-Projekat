@@ -6,11 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projekat_rmas.repository.AuthRepository
-import com.google.firebase.auth.FirebaseAuth
+import com.example.projekat_rmas.repository.FirebaseRepo
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class AuthViewModel(private val authRepository: FirebaseRepo) : ViewModel() {
 
     var registrationState by mutableStateOf<RegistrationState>(RegistrationState.Idle)
         private set

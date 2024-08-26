@@ -1,11 +1,12 @@
 package com.example.projekat_rmas.repository
 
 import android.net.Uri
+import com.example.projekat_rmas.model.MapObject
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
-class AuthRepository {
+class FirebaseRepo {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
@@ -76,4 +77,74 @@ class AuthRepository {
                 }
             }
     }
+
+    fun addObject(
+        title: String,
+        subject: String,
+        description: String,
+        locationLat: Double,
+        locationLng: Double,
+        imageUri: Uri?,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            // Podaci o objektu
+            val objectData = hashMapOf(
+                "title" to title,
+                "subject" to subject,
+                "description" to description,
+                "userId" to userId,
+                "latitude" to locationLat,
+                "longitude" to locationLng
+            )
+
+            // Čuvanje podataka o objektu u Firestore
+            db.collection("objects").add(objectData)
+                .addOnSuccessListener { documentReference ->
+                    val objectId = documentReference.id
+
+                    // Ako postoji slika, upload slike u Firebase Storage
+                    imageUri?.let { uri ->
+                        val storageRef = storage.reference.child("object_photos/$objectId.jpg")
+                        storageRef.putFile(uri)
+                            .addOnSuccessListener {
+                                storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                                    db.collection("objects").document(objectId)
+                                        .update("photoUrl", downloadUrl.toString())
+                                        .addOnSuccessListener {
+                                            onResult(true, null)
+                                        }
+                                }
+                            }
+                            .addOnFailureListener { exception ->
+                                onResult(false, exception.message)
+                            }
+                    } ?: run {
+                        // Ako nema slike, završi uspešno
+                        onResult(true, null)
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    onResult(false, exception.message)
+                }
+        } else {
+            onResult(false, "User not authenticated")
+        }
+    }
+
+    fun getAllObjects(onResult: (List<MapObject>, String?) -> Unit) {
+        db.collection("objects")
+            .get()
+            .addOnSuccessListener { result ->
+                val objects = result.documents.mapNotNull { document ->
+                    document.toObject(MapObject::class.java)
+                }
+                onResult(objects, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(emptyList(), exception.message)
+            }
+    }
+
 }
