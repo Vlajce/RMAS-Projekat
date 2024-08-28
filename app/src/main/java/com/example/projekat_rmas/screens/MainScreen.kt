@@ -10,13 +10,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.projekat_rmas.R
 import com.example.projekat_rmas.components.BottomNavigationBar
+import com.example.projekat_rmas.viewmodel.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavHostController, viewModel: AuthViewModel) {
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("") },
+                actions = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "Logout", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(onClick = {
+                            viewModel.logout(navController)
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.logout),
+                                contentDescription = "Logout",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+            )
+        },
         bottomBar = {
             BottomNavigationBar(navController)
         },
@@ -25,7 +50,7 @@ fun MainScreen(navController: NavHostController) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(it)  // Ovdje se padding primenjuje na osnovu sadržaja Scaffold-a
+                    .padding(it)
             ) {
                 Text(
                     text = "Welcome to the App!",
@@ -35,51 +60,3 @@ fun MainScreen(navController: NavHostController) {
         }
     )
 }
-
-
-@Composable
-fun BottomNavigationBar(navController: NavHostController) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = Color.White
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Main") },
-            label = { Text("Main") },
-            selected = false,
-            onClick = {
-                navController.navigate("main_screen") {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
-                }
-            }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Map") },
-            label = { Text("Map") },
-            selected = false,
-            onClick = {
-                navController.navigate("map_screen") {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
-                }
-            }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Star, contentDescription = "Leaderboard") },
-            label = { Text("Leaderboard") },
-            selected = false,
-            onClick = {
-                navController.navigate("leaderboard_screen") {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
-                }
-            }
-        )
-    }
-}
-
-
-
-
-

@@ -6,7 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
 import com.example.projekat_rmas.repository.FirebaseRepo
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val authRepository: FirebaseRepo) : ViewModel() {
@@ -100,6 +102,13 @@ class AuthViewModel(private val authRepository: FirebaseRepo) : ViewModel() {
         }
     }
 
+    fun logout(navController: NavHostController) {
+        FirebaseAuth.getInstance().signOut()
+        registrationState = RegistrationState.Idle  // Resetovanje stanja
+        navController.navigate("login") {
+            popUpTo("main_screen") { inclusive = true }
+        }
+    }
 }
 
 sealed class RegistrationState {

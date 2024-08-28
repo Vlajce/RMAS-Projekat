@@ -12,6 +12,7 @@ import com.example.projekat_rmas.screens.SignUpScreen
 import com.example.projekat_rmas.screens.TableScreen
 import com.example.projekat_rmas.viewmodel.AuthViewModel
 import com.example.projekat_rmas.viewmodel.AuthViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MainApp() {
@@ -21,7 +22,9 @@ fun MainApp() {
         factory = AuthViewModelFactory(authRepository)
     )
 
-    NavHost(navController = navController, startDestination = "login") {
+    val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
+
+    NavHost(navController = navController, if(isUserLoggedIn) "main_screen" else "login") {
         composable("signup") {
             SignUpScreen(navController, viewModel = viewModel)
         }
@@ -29,7 +32,7 @@ fun MainApp() {
             LoginScreen(navController, viewModel = viewModel)
         }
         composable("main_screen") {
-            MainScreen(navController)
+            MainScreen(navController, viewModel = viewModel)
         }
         composable("map_screen") {
             MapScreen(navController)

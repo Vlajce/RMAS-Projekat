@@ -1,8 +1,10 @@
 package com.example.projekat_rmas.repository
 
 import android.net.Uri
+import android.util.Log
 import com.example.projekat_rmas.model.MapObject
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
@@ -12,7 +14,7 @@ class FirebaseRepo {
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
     fun registerUser(
-        username : String,
+        username: String,
         email: String,
         password: String,
         fullname: String,
@@ -23,40 +25,53 @@ class FirebaseRepo {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val userId = auth.currentUser?.uid
-                    if (userId != null) {
-                        val profileData = hashMapOf(
-                            "username" to username,
-                            "fullname" to fullname,
-                            "phoneNumber" to phoneNumber,
-                            "email" to email
-                        )
+                    val user = auth.currentUser
+                    if (user != null) {
+                        // Ažuriraj profil korisnika i postavi displayName na username
+                        val profileUpdates = userProfileChangeRequest {
+                            displayName = username
+                        }
 
-                        // Čuvanje podataka u Firestore
-                        db.collection("users").document(userId).set(profileData)
-                            .addOnSuccessListener {
-                                // Upload slike ako postoji
-                                imageUri?.let { uri ->
-                                    val storageRef = storage.reference.child("profile_photos/$userId.jpg")
-                                    storageRef.putFile(uri)
+                        user.updateProfile(profileUpdates)
+                            .addOnCompleteListener { profileUpdateTask ->
+                                if (profileUpdateTask.isSuccessful) {
+                                    val userId = user.uid
+                                    val profileData = hashMapOf(
+                                        "username" to username,
+                                        "fullname" to fullname,
+                                        "phoneNumber" to phoneNumber,
+                                        "email" to email
+                                    )
+
+                                    // Čuvanje podataka u Firestore
+                                    db.collection("users").document(userId).set(profileData)
                                         .addOnSuccessListener {
-                                            storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                                                db.collection("users").document(userId)
-                                                    .update("photoUrl", downloadUrl.toString())
+                                            // Upload slike ako postoji
+                                            imageUri?.let { uri ->
+                                                val storageRef = storage.reference.child("profile_photos/$userId.jpg")
+                                                storageRef.putFile(uri)
                                                     .addOnSuccessListener {
-                                                        onResult(true, null)
+                                                        storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                                                            db.collection("users").document(userId)
+                                                                .update("photoUrl", downloadUrl.toString())
+                                                                .addOnSuccessListener {
+                                                                    onResult(true, null)
+                                                                }
+                                                        }
                                                     }
+                                                    .addOnFailureListener { exception ->
+                                                        onResult(false, exception.message)
+                                                    }
+                                            } ?: run {
+                                                onResult(true, null)
                                             }
                                         }
                                         .addOnFailureListener { exception ->
                                             onResult(false, exception.message)
                                         }
-                                } ?: run {
-                                    onResult(true, null)
+                                } else {
+                                    onResult(false, profileUpdateTask.exception?.message)
                                 }
-                            }
-                            .addOnFailureListener { exception ->
-                                onResult(false, exception.message)
                             }
                     } else {
                         onResult(false, "User ID is null")
@@ -85,18 +100,23 @@ class FirebaseRepo {
         locationLat: Double,
         locationLng: Double,
         imageUri: Uri?,
+        type: String,
         onResult: (Boolean, String?) -> Unit
     ) {
         val userId = auth.currentUser?.uid
-        if (userId != null) {
-            // Podaci o objektu
+        val username = auth.currentUser?.displayName
+        Log.e("Login", "Error: ${username}")
+        if (userId != null && username != null) {
             val objectData = hashMapOf(
                 "title" to title,
                 "subject" to subject,
                 "description" to description,
-                "userId" to userId,
+                "author" to username,
                 "latitude" to locationLat,
-                "longitude" to locationLng
+                "longitude" to locationLng,
+                "type" to type,
+                "rating" to null,
+                "timestamp" to System.currentTimeMillis()
             )
 
             // Čuvanje podataka o objektu u Firestore
