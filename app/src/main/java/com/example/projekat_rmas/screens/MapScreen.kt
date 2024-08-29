@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -30,6 +31,9 @@ import com.example.projekat_rmas.viewmodel.ObjectState
 import com.example.projekat_rmas.viewmodel.ObjectViewModel
 import com.example.projekat_rmas.viewmodel.ObjectViewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -44,7 +48,7 @@ import java.util.Locale
 @Composable
 fun MapScreen(
     navController: NavHostController,
-    objectViewModel: ObjectViewModel = viewModel(factory = ObjectViewModelFactory(FirebaseRepo()))
+    objectViewModel: ObjectViewModel
 ) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -70,8 +74,8 @@ fun MapScreen(
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            startLocationUpdates(context, fusedLocationClient) { location ->
+        if (isGranted) {//true ako korisnik prihvati koriscenje lokacije
+            startContinuousLocationUpdates(context, fusedLocationClient) { location ->
                 if (location != null) {
                     currentLocation = location
                     if (isMapReady && !isCameraMovedManually) {
@@ -92,17 +96,23 @@ fun MapScreen(
         }
     }
 
+    //proverava se da li aplikacija vec ima dozvolu
     val hasLocationPermission = remember {
         ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    //IZVRSAVA SE SVAKI PUT KADA SE hasLocPerm PROMENI!
+    //proveravamo da li aplikacija ima dozvolu za pracenje lokacije
+    //ako nema trazimo dozvolu preko locPermLauncher-a(gornja fja)
+    //ako ima, pokrece se fukncija startLocUpd, koja trazi poslednu poznatu lok
+    //ako se lokacij uspesno dobije, kamera se pomera na tr lok korisnika
     LaunchedEffect(hasLocationPermission) {
         if (!hasLocationPermission) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            startLocationUpdates(context, fusedLocationClient) { location ->
+            startContinuousLocationUpdates(context, fusedLocationClient) { location ->
                 if (location != null) {
                     currentLocation = location
                     if (isMapReady && !isCameraMovedManually) {
@@ -334,26 +344,30 @@ fun MapScreen(
     }
 }
 
-// Funkcija za dobijanje trenutne lokacije
-private fun startLocationUpdates(
+// Funkcija za dobijanje trenutne lokacije na po 10secs
+fun startContinuousLocationUpdates(
     context: Context,
     fusedLocationClient: FusedLocationProviderClient,
     onLocationReceived: (Location?) -> Unit
 ) {
-    // Proveravamo da li aplikacija ima dozvolu za pristup lokaciji
-    val hasLocationPermission = ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
+    val locationRequest = LocationRequest.create().apply {
+        interval = 10000  // Interval za dobijanje lokacije u milisekundama (npr. svakih 10 sekundi)
+        fastestInterval = 5000  // Najkraći interval između dva uzastopna ažuriranja
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    }
 
-    if (hasLocationPermission) {
-        // Ako je dozvola data, zatraži poslednju poznatu lokaciju
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            onLocationReceived(location)
+    val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            locationResult.lastLocation?.let { location ->
+                onLocationReceived(location)
+            }
         }
-    } else {
-        // Ako nema dozvolu, prosledi `null`
-        onLocationReceived(null)
+    }
+
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        == PackageManager.PERMISSION_GRANTED
+    ) {
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 }
 

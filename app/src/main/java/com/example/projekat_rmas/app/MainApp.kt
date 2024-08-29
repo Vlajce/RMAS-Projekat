@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -19,13 +20,16 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MainApp() {
+
+    Log.d("MainApp", "MainApp Composable loaded")
+
     val navController = rememberNavController()
-    val authRepository = FirebaseRepo()
+    val firebaseRepo = FirebaseRepo()
     val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(authRepository)
+        factory = AuthViewModelFactory(firebaseRepo)
     )
     val objectViewModel: ObjectViewModel = viewModel(
-        factory = ObjectViewModelFactory(FirebaseRepo()))
+        factory = ObjectViewModelFactory(firebaseRepo))
 
 
     val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
