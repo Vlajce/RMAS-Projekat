@@ -1,6 +1,7 @@
 package com.example.projekat_rmas.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -56,11 +57,25 @@ class ObjectViewModel(private val firebaseRepo: FirebaseRepo) : ViewModel() {
             if (error == null) {
                 allObjects = objects
                 objectState = ObjectState.ObjectsFetched(objects)
+                Log.d("Svi objekti nakon fetcha", "${allObjects}")
             } else {
                 objectState = ObjectState.Error(error)
             }
         }
     }
+
+    fun getObjectById(objectId: String): MapObject? {
+        Log.d("Svi objekti:", "${allObjects}")
+        Log.d("ObjectViewModel", "Looking for object with ID: $objectId")
+        val foundObject = allObjects.find { it.id == objectId }
+        if (foundObject != null) {
+            Log.d("ObjectViewModel", "Found object: ${foundObject.title}")
+        } else {
+            Log.d("ObjectViewModel", "Object not found")
+        }
+        return foundObject
+    }
+
 
     fun applyFilters(author: String, type: String, subject: String, rating: Int, startDate: Long?, endDate: Long?, radius: Float, userLocation: LatLng) {
         currentFilters = Filters(

@@ -1,6 +1,7 @@
 package com.example.projekat_rmas.model
 
 data class MapObject(
+    val id: String = "",
     val title: String = "",
     val subject: String = "",
     val description: String = "",

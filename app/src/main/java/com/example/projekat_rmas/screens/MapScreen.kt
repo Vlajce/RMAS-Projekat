@@ -214,8 +214,17 @@ fun MapScreen(
                                     val objects = (objectViewModel.objectState as ObjectState.ObjectsFetched).objects
                                     objects.forEach { mapObject ->
                                         val objectLocation = LatLng(mapObject.latitude, mapObject.longitude)
-                                        googleMap?.addMarker(MarkerOptions().position(objectLocation).title(mapObject.title))
+                                        googleMap?.addMarker(MarkerOptions().position(objectLocation).title(mapObject.title))?.tag = mapObject.id
+
                                     }
+                                }
+
+                                googleMap?.setOnMarkerClickListener { marker ->
+                                    val objectId = marker.tag as? String // Dohvati ID objekta iz tag-a
+                                    if (objectId != null) {
+                                        navController.navigate("object_details_screen/$objectId")
+                                    }
+                                    true
                                 }
 
                                 //Ako bismo zeleli da se kamera vrati na korisnikovu lokaciju nakon neke promene na mapi,

@@ -105,8 +105,8 @@ class FirebaseRepo {
     ) {
         val userId = auth.currentUser?.uid
         val username = auth.currentUser?.displayName
-        Log.e("Login", "Error: ${username}")
         if (userId != null && username != null) {
+            // Kreiraj početni objekt bez ID-ja
             val objectData = hashMapOf(
                 "title" to title,
                 "subject" to subject,
@@ -119,31 +119,39 @@ class FirebaseRepo {
                 "timestamp" to System.currentTimeMillis()
             )
 
-            // Čuvanje podataka o objektu u Firestore
+            // Sačuvaj podatke u Firestore i dobij ID
             db.collection("objects").add(objectData)
                 .addOnSuccessListener { documentReference ->
                     val objectId = documentReference.id
 
-                    // Ako postoji slika, upload slike u Firebase Storage
-                    imageUri?.let { uri ->
-                        val storageRef = storage.reference.child("object_photos/$objectId.jpg")
-                        storageRef.putFile(uri)
-                            .addOnSuccessListener {
-                                storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                                    db.collection("objects").document(objectId)
-                                        .update("photoUrl", downloadUrl.toString())
-                                        .addOnSuccessListener {
-                                            onResult(true, null)
+                    // Ažuriraj dokument sa ID-jem
+                    db.collection("objects").document(objectId)
+                        .update("id", objectId)
+                        .addOnSuccessListener {
+                            // Ako postoji slika, upload slike u Firebase Storage
+                            imageUri?.let { uri ->
+                                val storageRef = storage.reference.child("object_photos/$objectId.jpg")
+                                storageRef.putFile(uri)
+                                    .addOnSuccessListener {
+                                        storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                                            db.collection("objects").document(objectId)
+                                                .update("photoUrl", downloadUrl.toString())
+                                                .addOnSuccessListener {
+                                                    onResult(true, null)
+                                                }
                                         }
-                                }
+                                    }
+                                    .addOnFailureListener { exception ->
+                                        onResult(false, exception.message)
+                                    }
+                            } ?: run {
+                                // Ako nema slike, završi uspešno
+                                onResult(true, null)
                             }
-                            .addOnFailureListener { exception ->
-                                onResult(false, exception.message)
-                            }
-                    } ?: run {
-                        // Ako nema slike, završi uspešno
-                        onResult(true, null)
-                    }
+                        }
+                        .addOnFailureListener { exception ->
+                            onResult(false, exception.message)
+                        }
                 }
                 .addOnFailureListener { exception ->
                     onResult(false, exception.message)
@@ -158,7 +166,7 @@ class FirebaseRepo {
             .get()
             .addOnSuccessListener { result ->
                 val objects = result.documents.mapNotNull { document ->
-                    document.toObject(MapObject::class.java)
+                    document.toObject(MapObject::class.java)?.copy(id = document.id)
                 }
                 onResult(objects, null)
             }
@@ -166,5 +174,23 @@ class FirebaseRepo {
                 onResult(emptyList(), exception.message)
             }
     }
+
+    /*fun getAllObjects(onResult: (List<MapObject>, String?) -> Unit) {
+        db.collection("objects")
+            .get()
+            .addOnSuccessListener { result ->
+                val objects = mutableListOf<MapObject>()
+                for (document in result) {
+                    val mapObject = document.toObject(MapObject::class.java)
+                    mapObject.id = document.id
+                    objects.add(mapObject)
+                }
+                onResult(objects, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(emptyList(), exception.message)
+            }
+    }*/
+
 
 }
