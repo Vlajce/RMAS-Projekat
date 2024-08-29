@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -56,6 +57,7 @@ fun MapScreen(
 
     var showAddObjectDialog by remember { mutableStateOf(false) }
     var showFilters by remember { mutableStateOf(false) }
+    var showMarkerDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     var isCameraMovedManually by remember { mutableStateOf(false) }
 
@@ -219,13 +221,23 @@ fun MapScreen(
                                     }
                                 }
 
-                                googleMap?.setOnMarkerClickListener { marker ->
+                                /*googleMap?.setOnMarkerClickListener { marker ->
                                     val objectId = marker.tag as? String // Dohvati ID objekta iz tag-a
                                     if (objectId != null) {
                                         navController.navigate("object_details_screen/$objectId")
                                     }
                                     true
+                                }*/
+
+                                googleMap?.setOnMarkerClickListener { marker ->
+                                    val objectId = marker.tag as? String
+                                    val title = marker.title
+                                    if (objectId != null && title != null) {
+                                        showMarkerDialog = title to objectId
+                                    }
+                                    true
                                 }
+
 
                                 //Ako bismo zeleli da se kamera vrati na korisnikovu lokaciju nakon neke promene na mapi,
                                 //npr. odlutamo na mapi, uvedemo filtere i ovo ce omoguciti da se korisnikova lokacija vrati u fokus.
@@ -265,6 +277,27 @@ fun MapScreen(
                         else -> {}
                     }
                 }
+            }
+
+            if (showMarkerDialog != null) {
+                val (title, objectId) = showMarkerDialog!!
+                AlertDialog(
+                    onDismissRequest = { showMarkerDialog = null },
+                    title = { Text(text = title) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            navController.navigate("object_details_screen/$objectId")
+                            showMarkerDialog = null
+                        }) {
+                            Text("View Details")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showMarkerDialog = null }) {
+                            Text("Close")
+                        }
+                    }
+                )
             }
 
             // Prikazivanje dijaloga za dodavanje objekta
