@@ -3,6 +3,7 @@ package com.example.projekat_rmas.repository
 import android.net.Uri
 import android.util.Log
 import com.example.projekat_rmas.model.MapObject
+import com.example.projekat_rmas.model.Rate
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -40,7 +41,8 @@ class FirebaseRepo {
                                         "username" to username,
                                         "fullname" to fullname,
                                         "phoneNumber" to phoneNumber,
-                                        "email" to email
+                                        "email" to email,
+                                        "points" to 0
                                     )
 
                                     // Čuvanje podataka u Firestore
@@ -112,10 +114,11 @@ class FirebaseRepo {
                 "subject" to subject,
                 "description" to description,
                 "author" to username,
+                "ownerId" to userId,
                 "latitude" to locationLat,
                 "longitude" to locationLng,
                 "type" to type,
-                "rating" to null,
+                "rating" to 0.0,
                 "timestamp" to System.currentTimeMillis()
             )
 
@@ -175,22 +178,109 @@ class FirebaseRepo {
             }
     }
 
-    /*fun getAllObjects(onResult: (List<MapObject>, String?) -> Unit) {
-        db.collection("objects")
+    fun getObjectById(objectId: String, onResult: (MapObject?) -> Unit) {
+        db.collection("objects").document(objectId).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val mapObject = document.toObject(MapObject::class.java)
+                    onResult(mapObject)
+                } else {
+                    onResult(null)
+                }
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+    fun addOrUpdateRating(userId: String, objectId: String, value: Int, onResult: (Boolean) -> Unit) {
+        val ratingRef = db.collection("ratings")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("objectId", objectId)
+
+        ratingRef.get().addOnSuccessListener { documents ->
+            if (documents.isEmpty) {
+                // Dodaj novu ocenu ako ne postoji
+                val newRating = Rate(userId, objectId, value)
+                db.collection("ratings").add(newRating)
+                    .addOnSuccessListener {
+                        onResult(true)
+                    }
+                    .addOnFailureListener {
+                        onResult(false)
+                    }
+            } else {
+                // Ažuriraj postojeću ocenu
+                for (document in documents) {
+                    db.collection("ratings").document(document.id)
+                        .update("value", value)
+                        .addOnSuccessListener {
+                            onResult(true)
+                        }
+                        .addOnFailureListener {
+                            onResult(false)
+                        }
+                }
+            }
+        }.addOnFailureListener {
+            onResult(false)
+        }
+    }
+
+    fun getRatingsForObject(objectId: String, onResult: (List<Rate>) -> Unit) {
+        db.collection("ratings")
+            .whereEqualTo("objectId", objectId)
             .get()
             .addOnSuccessListener { result ->
-                val objects = mutableListOf<MapObject>()
-                for (document in result) {
-                    val mapObject = document.toObject(MapObject::class.java)
-                    mapObject.id = document.id
-                    objects.add(mapObject)
+                val ratings = result.documents.mapNotNull { document ->
+                    document.toObject(Rate::class.java)
                 }
-                onResult(objects, null)
+                onResult(ratings)
             }
-            .addOnFailureListener { exception ->
-                onResult(emptyList(), exception.message)
+            .addOnFailureListener {
+                onResult(emptyList())
             }
-    }*/
+    }
 
+    fun getUserRatingForObject(objectId: String, userId: String, onResult: (Int?) -> Unit) {
+        db.collection("ratings")
+            .whereEqualTo("objectId", objectId)
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val rating = documents.documents[0].getLong("value")?.toInt()
+                    onResult(rating)
+                } else {
+                    onResult(null) // Korisnik još uvek nije ocenio ovaj objekat
+                }
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+
+    fun updateObjectRating(objectId: String, newRating: Float) {
+        db.collection("objects").document(objectId)
+            .update("rating", newRating)
+            .addOnSuccessListener {
+                Log.d("FirebaseRepo", "Object rating updated successfully")
+            }
+            .addOnFailureListener {
+                Log.e("FirebaseRepo", "Failed to update object rating")
+            }
+    }
+
+    fun updateOwnerPoints(ownerId: String, pointsToAdd: Int) {
+        val userRef = db.collection("users").document(ownerId)
+        userRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val currentPoints = document.getLong("points") ?: 0L
+                val newPoints = currentPoints + pointsToAdd
+                userRef.update("points", newPoints)
+            }
+        }
+    }
 
 }

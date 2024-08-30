@@ -9,7 +9,8 @@ data class MapObject(
     val longitude: Double = 0.0,
     val photoUrl: String? = null,
     val author: String = "",
+    val ownerId: String = "",
     val type: String = "",
-    val rating: Int? = 0,
+    val rating: Float? = 0f,
     val timestamp: Long = 0L
 )

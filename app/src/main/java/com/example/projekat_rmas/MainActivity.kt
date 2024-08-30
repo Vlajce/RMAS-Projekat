@@ -27,15 +27,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Provera i zahtev za dozvolui pracenja lokacije
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_CODE_ACCESS_FINE_LOCATION)
         } else {
             startLocationService() // Ako je dozvola već dodeljena, pokreni servis
         }
 
-        // Pokretanje LocationService-a
-        val intent = Intent(this, LocationService::class.java)
-        startService(intent)
+
 
         setContent {
             Projekat_RMASTheme {
@@ -43,6 +42,13 @@ class MainActivity : ComponentActivity() {
                 }
         }
     }
+
+    // Ponovno pokretanje LocService-a kada se aplikacija vrati u prvi plan
+    override fun onResume() {
+        super.onResume()
+        startLocationService()
+    }
+
 
     private fun startLocationService() {
         val intent = Intent(this, LocationService::class.java)

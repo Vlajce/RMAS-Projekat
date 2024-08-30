@@ -351,8 +351,8 @@ fun startContinuousLocationUpdates(
     onLocationReceived: (Location?) -> Unit
 ) {
     val locationRequest = LocationRequest.create().apply {
-        interval = 10000  // Interval za dobijanje lokacije u milisekundama (npr. svakih 10 sekundi)
-        fastestInterval = 5000  // Najkraći interval između dva uzastopna ažuriranja
+        interval = 5000  // Interval za dobijanje lokacije u milisekundama (npr. svakih 10 sekundi)
+        fastestInterval = 2000  // Najkraći interval između dva uzastopna ažuriranja
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
     }
 
@@ -375,13 +375,13 @@ fun startContinuousLocationUpdates(
 @Composable
 fun FilterSection(
     objectViewModel: ObjectViewModel,
-    onApplyFilters: (String, String, String, Int, Long?, Long?, Float) -> Unit,
+    onApplyFilters: (String, String, String, Float, Long?, Long?, Float) -> Unit,
     onClearFilters: () -> Unit
 ) {
     var author by remember { mutableStateOf(objectViewModel.currentFilters.author) }
     var selectedType by remember { mutableStateOf(objectViewModel.currentFilters.type) }
     var subject by remember { mutableStateOf(objectViewModel.currentFilters.subject) }
-    var rating by remember { mutableStateOf(objectViewModel.currentFilters.rating) }
+    var rating by remember { mutableStateOf(objectViewModel.currentFilters.rating.toFloat()) }
     var startDate by remember { mutableStateOf(objectViewModel.currentFilters.startDate) }
     var endDate by remember { mutableStateOf(objectViewModel.currentFilters.endDate) }
     var radius by remember { mutableStateOf(objectViewModel.currentFilters.radius) }
@@ -436,7 +436,7 @@ fun FilterSection(
         }
 
         Text(text = "Rating: $rating")
-        Slider(value = rating.toFloat(), onValueChange = { rating = it.toInt() }, valueRange = 0f..10f)
+        Slider(value = rating, onValueChange = { rating = it }, valueRange = 1f..10f, steps = 9)
 
         Spacer(modifier = Modifier.height(8.dp))
         DatePicker(
@@ -462,7 +462,7 @@ fun FilterSection(
                 author = "" // Resetovanje lokalnih vrednosti
                 selectedType = ""
                 subject = ""
-                rating = 0
+                rating = 0f
                 startDate = null
                 endDate = null
                 radius = 0.0f
