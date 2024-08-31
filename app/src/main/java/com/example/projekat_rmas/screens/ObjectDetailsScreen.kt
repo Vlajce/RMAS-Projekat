@@ -45,13 +45,14 @@ import androidx.compose.ui.text.style.TextAlign
 import coil.compose.rememberImagePainter
 import com.example.projekat_rmas.model.MapObject
 import com.example.projekat_rmas.viewmodel.ObjectViewModel
+import com.example.projekat_rmas.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ObjectDetailsScreen(navController: NavHostController, objectViewModel: ObjectViewModel, objectId: String) {
+fun ObjectDetailsScreen(navController: NavHostController, objectViewModel: ObjectViewModel, userViewModel: UserViewModel, objectId: String) {
     var mapObject by remember { mutableStateOf<MapObject?>(null) }
     val currentUser = FirebaseAuth.getInstance().currentUser
 
@@ -67,7 +68,7 @@ fun ObjectDetailsScreen(navController: NavHostController, objectViewModel: Objec
             objectViewModel.getObjectById(objectId) { mapObjectResult ->
                 mapObject = mapObjectResult
                 mapObjectResult?.let {
-                    objectViewModel.getUserRatingForObject(it.id) { userRating ->
+                    userViewModel.getUserRatingForObject(it.id) { userRating ->
                         if (userRating != null) {
                             rating = userRating.toFloat()
                             buttonText = "Update your rate"
@@ -234,13 +235,17 @@ fun ObjectDetailsScreen(navController: NavHostController, objectViewModel: Objec
                 confirmButton = {
                     TextButton(onClick = {
                         mapObject?.let {
-                            objectViewModel.rateObject(it.id, rating.toInt()) { success ->
+                            objectViewModel.rateObject(it.id, rating.toInt()) { success, ownerId, difference ->
                                 if (success) {
                                     ratingResult = "Rating Submitted Successfully"
                                     objectViewModel.getObjectById(objectId) { updatedObject ->
                                         if (updatedObject != null) {
                                             mapObject = updatedObject // Ovde osvežavamo objekat sa novom prosecnom ocenom
                                         }
+                                    }
+                                    // Ako je uspešno ocenjivanje, ažuriraj poene vlasnika objekta
+                                    ownerId?.let { id ->
+                                        userViewModel.updateOwnerPoints(id, difference)
                                     }
                                 } else {
                                     ratingResult = "Failed to Submit Rating"

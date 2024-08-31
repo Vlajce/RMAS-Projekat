@@ -299,12 +299,12 @@ fun MapScreen(
                             navController.navigate("object_details_screen/$objectId")
                             showMarkerDialog = null
                         }) {
-                            Text("View Details")
+                            Text("View Details", style = MaterialTheme.typography.titleMedium)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showMarkerDialog = null }) {
-                            Text("Close")
+                            Text("Close", style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 )

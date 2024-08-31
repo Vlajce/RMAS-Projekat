@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.projekat_rmas.model.MapObject
 import com.example.projekat_rmas.model.Rate
+import com.example.projekat_rmas.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -282,5 +283,21 @@ class FirebaseRepo {
             }
         }
     }
+
+    fun getAllUsers(onResult: (List<User>, String?) -> Unit) {
+        db.collection("users")
+            .orderBy("points", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener { result ->
+                val users = result.documents.mapNotNull { document ->
+                    document.toObject(User::class.java)?.copy(id = document.id)
+                }
+                onResult(users, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(emptyList(), exception.message)
+            }
+    }
+
 
 }

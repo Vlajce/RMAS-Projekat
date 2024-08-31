@@ -20,17 +20,17 @@ import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, viewModel: AuthViewModel) {
+fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("") },
                 actions = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Logout", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Logout", style = MaterialTheme.typography.titleLarge, color = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(onClick = {
-                            viewModel.logout(navController)
+                            authViewModel.logout(navController)
                         }) {
                             Icon(
                                 painter = painterResource(id = R.drawable.logout),
@@ -39,7 +39,13 @@ fun MainScreen(navController: NavHostController, viewModel: AuthViewModel) {
                             )
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
         },
         bottomBar = {

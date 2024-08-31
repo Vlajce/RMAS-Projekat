@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.example.projekat_rmas.model.User
 import com.example.projekat_rmas.repository.FirebaseRepo
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -109,6 +110,7 @@ class AuthViewModel(private val authRepository: FirebaseRepo) : ViewModel() {
             popUpTo("main_screen") { inclusive = true }
         }
     }
+
 }
 
 sealed class RegistrationState {

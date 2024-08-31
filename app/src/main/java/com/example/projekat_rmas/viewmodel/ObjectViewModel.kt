@@ -49,9 +49,9 @@
             }
         }
 
-        fun resetState() {
+        /*fun resetState() {
             objectState = ObjectState.Idle
-        }
+        }*/
 
         fun fetchAllObjects() {
             objectState = ObjectState.Loading
@@ -111,37 +111,31 @@
             return results[0] / 1000 // Vraća rezultat u kilometrima
         }
 
-        fun rateObject(objectId: String, value: Int, onResult: (Boolean) -> Unit) {
+        fun rateObject(objectId: String, value: Int, onResult: (Boolean, String?, Int) -> Unit) {
             val userId = FirebaseAuth.getInstance().currentUser?.uid
             if (userId != null) {
                 firebaseRepo.getUserRatingForObject(objectId, userId) { oldRating ->
                     firebaseRepo.addOrUpdateRating(userId, objectId, value) { success ->
                         if (success) {
-                            // Osvežimo prosečnu ocenu objekta nakon dodavanja ili izmene ocene
                             refreshObjectRating(objectId) { updatedRating ->
-                                // Prvo dobijamo vlasnika objekta (ownerId) kako bismo ispravno ažurirali poene
                                 firebaseRepo.getObjectById(objectId) { mapObject ->
                                     mapObject?.let {
                                         val ownerId = it.ownerId
                                         val difference = value - (oldRating ?: 0)
-                                        updateOwnerPoints(ownerId, difference) // Ažuriranje poena vlasnika objekta
-                                        onResult(true)
-                                    } ?: onResult(false) // Ako objekt nije pronađen
+                                        onResult(true, ownerId, difference) // Prosledimo ownerId i razliku u oceni
+                                    } ?: onResult(false, null, 0)
                                 }
                             }
                         } else {
-                            onResult(false)
+                            onResult(false, null, 0)
                         }
                     }
                 }
             } else {
-                onResult(false)
+                onResult(false, null, 0)
             }
         }
 
-        private fun updateOwnerPoints(ownerId: String, pointsToAdd: Int) {
-            firebaseRepo.updateOwnerPoints(ownerId, pointsToAdd)
-        }
 
 
         private fun refreshObjectRating(objectId: String, onResult: (Float) -> Unit) {
@@ -149,17 +143,6 @@
                 val averageRating = ratings.map { it.value }.average().toFloat()
                 firebaseRepo.updateObjectRating(objectId, averageRating)
                 onResult(averageRating) // Vraca azuriranu prosecnu ocenu objekta
-            }
-        }
-
-        fun getUserRatingForObject(objectId: String, onResult: (Int?) -> Unit) {
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null) {
-                firebaseRepo.getUserRatingForObject(objectId, currentUser.uid) { rating ->
-                    onResult(rating)
-                }
-            } else {
-                onResult(null)
             }
         }
 

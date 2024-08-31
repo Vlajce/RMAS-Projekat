@@ -264,8 +264,8 @@ fun BottomNavigationBar(navController: NavHostController) {
     ) {
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Main", modifier = Modifier.size(24.dp)) },
-            label = { Text("Main") },
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home", modifier = Modifier.size(24.dp)) },
+            label = { Text("Home") },
             selected = currentRoute == "main_screen",
             onClick = {
                 if (currentRoute != "main_screen") {

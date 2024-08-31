@@ -16,6 +16,8 @@ import com.example.projekat_rmas.viewmodel.AuthViewModel
 import com.example.projekat_rmas.viewmodel.AuthViewModelFactory
 import com.example.projekat_rmas.viewmodel.ObjectViewModel
 import com.example.projekat_rmas.viewmodel.ObjectViewModelFactory
+import com.example.projekat_rmas.viewmodel.UserViewModel
+import com.example.projekat_rmas.viewmodel.UserViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -31,6 +33,10 @@ fun MainApp() {
     val objectViewModel: ObjectViewModel = viewModel(
         factory = ObjectViewModelFactory(firebaseRepo))
 
+    val userViewModel: UserViewModel = viewModel(
+        factory =  UserViewModelFactory(firebaseRepo)
+    )
+
 
     val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
 
@@ -42,20 +48,20 @@ fun MainApp() {
             LoginScreen(navController, viewModel = authViewModel)
         }
         composable("main_screen") {
-            MainScreen(navController, viewModel = authViewModel)
+            MainScreen(navController, authViewModel)
         }
         composable("map_screen") {
             MapScreen(navController, objectViewModel)
         }
         composable("leaderboard_screen") {
-            LeaderboardScreen(navController)
+            LeaderboardScreen(navController, userViewModel)
         }
         composable("table_screen"){
-            TableScreen(navController)
+            TableScreen(navController, objectViewModel)
         }
-        composable("object_details_screen/{objectId}") { backStackEntry ->
-            val objectId = backStackEntry.arguments?.getString("objectId") ?: return@composable
-            ObjectDetailsScreen(navController, objectViewModel, objectId)
+        composable("object_details_screen/{objectId}") { backStackEntry -> //stanje navigacije koje sadrži informacije o trenutnoj ruti, uključujući argumente proslijeđene toj ruti.
+            val objectId = backStackEntry.arguments?.getString("objectId") ?: return@composable //kao provera, ako se ne dobiej objectID kod se prekida ali ne dolazi do greske
+            ObjectDetailsScreen(navController, objectViewModel,userViewModel, objectId)
         }
 
     }
