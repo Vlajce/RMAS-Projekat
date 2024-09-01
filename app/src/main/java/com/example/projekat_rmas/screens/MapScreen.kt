@@ -185,7 +185,6 @@ fun MapScreen(
                     )
                 }
 
-
                 // AndroidView za prikaz mape ispod dugmića
                 Box(
                     modifier = Modifier.fillMaxSize()
@@ -230,14 +229,6 @@ fun MapScreen(
 
                                     }
                                 }
-
-                                /*googleMap?.setOnMarkerClickListener { marker ->
-                                    val objectId = marker.tag as? String // Dohvati ID objekta iz tag-a
-                                    if (objectId != null) {
-                                        navController.navigate("object_details_screen/$objectId")
-                                    }
-                                    true
-                                }*/
 
                                 googleMap?.setOnMarkerClickListener { marker ->
                                     val objectId = marker.tag as? String

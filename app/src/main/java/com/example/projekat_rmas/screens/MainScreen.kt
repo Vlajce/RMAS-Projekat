@@ -1,26 +1,48 @@
 package com.example.projekat_rmas.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import com.example.projekat_rmas.MainActivity
 import com.example.projekat_rmas.R
 import com.example.projekat_rmas.components.BottomNavigationBar
+import com.example.projekat_rmas.service.LocationService
 import com.example.projekat_rmas.viewmodel.AuthViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
+    val context = LocalContext.current
+    var serviceRunningState by remember { mutableStateOf(false) }
+    var permissionsRequested by remember { mutableStateOf(false) }
+
+    // Provera i zahtev za dozvole kada se uđe u MainScreen
+    if (!permissionsRequested) {
+        LaunchedEffect(Unit) {
+            requestAllPermissions(context)
+            permissionsRequested = true
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,17 +74,91 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
             BottomNavigationBar(navController)
         },
         content = {
-            Box(
-                contentAlignment = Alignment.Center,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
             ) {
-                Text(
-                    text = "Welcome to the App!",
-                    style = MaterialTheme.typography.titleLarge
+                Image(
+                    painter = painterResource(id = R.drawable.homescreenimage),
+                    contentDescription = "School Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .height(300.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Welcome to the app for finding private tutors and schools!",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp
+                    ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "This app helps you find the best private tutors and schools in your area, rate them, and help others make informed decisions.",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = {
+                        if (serviceRunningState) {
+                            LocationService.stopLocationService(context)
+                            serviceRunningState = false
+                        } else {
+                            // Provera dozvola pre pokretanja servisa
+                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                LocationService.startLocationService(context)
+                                serviceRunningState = true
+                            } else {
+                                Toast.makeText(context, "Location permission is required to start the service.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (serviceRunningState) Color.Red else MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text(text = if (serviceRunningState) "Stop Location Service" else "Start Location Service")
+                }
             }
         }
     )
 }
+
+// Funkcija za proveru i zahtev za sve potrebne dozvole
+private fun requestAllPermissions(context: Context) {
+    val permissionsNeeded = mutableListOf<String>()
+
+    // Provera i dodavanje dozvole za notifikacije
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // Provera i dodavanje dozvole za lokaciju
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+
+    // Zahtevaj sve potrebne dozvole odjednom
+    if (permissionsNeeded.isNotEmpty()) {
+        ActivityCompat.requestPermissions(context as MainActivity, permissionsNeeded.toTypedArray(), REQUEST_CODE_PERMISSIONS)
+    }
+}
+
+private const val REQUEST_CODE_PERMISSIONS = 1001
+
+
+

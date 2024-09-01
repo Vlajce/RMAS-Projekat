@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -15,6 +16,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.projekat_rmas.R
 import com.example.projekat_rmas.MainActivity
 import com.google.android.gms.location.*
@@ -148,5 +150,22 @@ class LocationService : Service() {
             .setSmallIcon(R.drawable.ic_pin_drop)
             .setContentIntent(pendingIntent)
             .build()
+    }
+
+
+    companion object {
+        fun startLocationService(context: Context) {
+            val intent = Intent(context, LocationService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.startForegroundService(context, intent)
+            } else {
+                context.startService(intent)
+            }
+        }
+
+        fun stopLocationService(context: Context) {
+            val intent = Intent(context, LocationService::class.java)
+            context.stopService(intent)
+        }
     }
 }

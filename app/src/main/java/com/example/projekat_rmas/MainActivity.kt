@@ -2,11 +2,12 @@ package com.example.projekat_rmas
 
 import MainApp
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,43 +17,19 @@ import com.example.projekat_rmas.service.LocationService
 import com.example.projekat_rmas.ui.theme.Projekat_RMASTheme
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Provera i zahtev za dozvolu za notifikacije na Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_POST_NOTIFICATIONS)
-            }
-        }
-
-        // Provera i zahtev za dozvolui pracenja lokacije
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_CODE_ACCESS_FINE_LOCATION)
-        } else {
-            startLocationService() // Ako je dozvola već dodeljena, pokreni servis
-        }
-
-
+        // Proveri i zatraži sve potrebne dozvole
+        //requestAllPermissions()
 
         setContent {
             Projekat_RMASTheme {
                 MainApp()
-                }
+            }
         }
-    }
-
-    // Ponovno pokretanje LocService-a kada se aplikacija vrati u prvi plan
-    override fun onResume() {
-        super.onResume()
-        startLocationService()
-    }
-
-
-    private fun startLocationService() {
-        val intent = Intent(this, LocationService::class.java)
-        startService(intent)
     }
 
     // Rezultat zahteva za dozvole
@@ -61,17 +38,43 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == REQUEST_CODE_ACCESS_FINE_LOCATION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startLocationService()
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            var allPermissionsGranted = true
+            var deniedPermission: String? = null
+
+            for (i in grantResults.indices) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false
+                    deniedPermission = permissions[i]
+                    break
+                }
+            }
+
+            if (allPermissionsGranted) {
+                // Sve dozvole su dodeljene
+                Log.d("Permissions", "All permissions granted.")
             } else {
-                Log.d("MainActivity", "Permission denied for location")
+                Log.d("Permissions", "Permission denied for: $deniedPermission")
+                // Korisnik je odbio neku dozvolu, prikaži Toast
+                Toast.makeText(this, "Permissions are required for the app to function correctly.", Toast.LENGTH_SHORT).show()
+
+                // Provera ako korisnik nije označio "Don't ask again"
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, deniedPermission!!)) {
+                    // Nakon 5 sekundi, ponovo prikaži dijalog za dozvolu
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        ActivityCompat.requestPermissions(this, arrayOf(deniedPermission), REQUEST_CODE_PERMISSIONS)
+                    }, 5000)
+                } else {
+                    // Korisnik je označio "Don't ask again", mora ručno omogućiti dozvolu
+                    Toast.makeText(this, "Permission denied permanently, please enable it in app settings.", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
 
+
+
     companion object {
-        private const val REQUEST_CODE_POST_NOTIFICATIONS = 1001
-        private const val REQUEST_CODE_ACCESS_FINE_LOCATION = 1002
+        private const val REQUEST_CODE_PERMISSIONS = 1001
     }
 }

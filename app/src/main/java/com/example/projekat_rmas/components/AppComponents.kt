@@ -289,7 +289,6 @@ fun BottomNavigationBar(navController: NavHostController) {
             onClick = {
                 if (currentRoute != "map_screen") {
                     navController.navigate("map_screen") {
-                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
                         launchSingleTop = true
                     }
                 }
@@ -308,7 +307,6 @@ fun BottomNavigationBar(navController: NavHostController) {
             onClick = {
                 if (currentRoute != "table_screen") {
                     navController.navigate("table_screen") {
-                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
                         launchSingleTop = true
                     }
                 }
@@ -327,7 +325,6 @@ fun BottomNavigationBar(navController: NavHostController) {
             onClick = {
                 if (currentRoute != "leaderboard_screen") {
                     navController.navigate("leaderboard_screen") {
-                        popUpTo(navController.graph.startDestinationId) {inclusive = true}
                         launchSingleTop = true
                     }
                 }

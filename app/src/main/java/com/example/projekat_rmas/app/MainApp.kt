@@ -23,8 +23,6 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun MainApp() {
 
-    Log.d("MainApp", "MainApp Composable loaded")
-
     val navController = rememberNavController()
     val firebaseRepo = FirebaseRepo()
     val authViewModel: AuthViewModel = viewModel(
