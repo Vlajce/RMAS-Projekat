@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -57,6 +59,7 @@ fun AddObjectDialog(
     }
 
     AlertDialog(
+
         onDismissRequest = onDismiss,
         title = { Text(
             text = "Add new private school/professor",
@@ -64,12 +67,17 @@ fun AddObjectDialog(
             textAlign = TextAlign.Center
         ) },
         text = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()))
+            {
                 TextField(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Title") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     singleLine = true,
                     maxLines = 1,

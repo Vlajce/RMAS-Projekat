@@ -7,6 +7,8 @@ import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -99,13 +101,14 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.homescreenimage),
                     contentDescription = "School Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .height(300.dp)
+                        .height(290.dp)
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 )
@@ -128,6 +131,14 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "You can use this button to turn notifications on or off.",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
                 Button(
                     onClick = {
                         if (serviceRunningState) {
@@ -148,7 +159,7 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
                     ),
                     modifier = Modifier.padding(top = 16.dp)
                 ) {
-                    Text(text = if (serviceRunningState) "Stop Location Service" else "Start Location Service")
+                    Text(text = if (serviceRunningState) "Stop Notification Service" else "Start Notification Service")
                 }
             }
         }
