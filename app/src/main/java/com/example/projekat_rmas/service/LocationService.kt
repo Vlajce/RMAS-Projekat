@@ -31,7 +31,7 @@ class LocationService : Service() {
     private val firestore = Firebase.firestore
 
     private val lastNotificationTimes = ConcurrentHashMap<String, Long>()
-    private val notificationInterval = 20 * 60 * 1000 //20 minuta
+    private val notificationInterval = 10 * 1 * 1000 //20 minuta
 
     override fun onCreate() {
         super.onCreate()

@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,25 +22,43 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.projekat_rmas.MainActivity
 import com.example.projekat_rmas.R
 import com.example.projekat_rmas.components.BottomNavigationBar
 import com.example.projekat_rmas.service.LocationService
 import com.example.projekat_rmas.viewmodel.AuthViewModel
+import com.example.projekat_rmas.viewmodel.NotificationViewModel
+import com.example.projekat_rmas.viewmodel.NotificationViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
     val context = LocalContext.current
-    var serviceRunningState by remember { mutableStateOf(false) }
     var permissionsRequested by remember { mutableStateOf(false) }
+
+    val notificationViewModel: NotificationViewModel = viewModel(
+        factory = NotificationViewModelFactory(context)
+    )
+    val serviceRunningState by notificationViewModel.serviceRunningState.observeAsState(false)
+
+    val hasLocationPermission = ContextCompat.checkSelfPermission(
+        context, Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
 
     // Provera i zahtev za dozvole kada se uđe u MainScreen
     if (!permissionsRequested) {
         LaunchedEffect(Unit) {
             requestAllPermissions(context)
             permissionsRequested = true
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            notificationViewModel.setNotificationEnabled(false)
+            LocationService.stopLocationService(context)
         }
     }
 
@@ -113,12 +132,12 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
                     onClick = {
                         if (serviceRunningState) {
                             LocationService.stopLocationService(context)
-                            serviceRunningState = false
+                            notificationViewModel.setNotificationEnabled(enabled = false)
                         } else {
                             // Provera dozvola pre pokretanja servisa
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                                 LocationService.startLocationService(context)
-                                serviceRunningState = true
+                                notificationViewModel.setNotificationEnabled(enabled = true)
                             } else {
                                 Toast.makeText(context, "Location permission is required to start the service.", Toast.LENGTH_SHORT).show()
                             }

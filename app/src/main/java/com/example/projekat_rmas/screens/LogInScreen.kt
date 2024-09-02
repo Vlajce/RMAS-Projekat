@@ -54,7 +54,7 @@ fun LoginScreen(navController: NavHostController, viewModel: AuthViewModel){
 
             Spacer(modifier = Modifier.height(20.dp))
             NormalTextComponent(value = "Hey there")
-            HeadingTextComponent(value = "Welcome Back")
+            HeadingTextComponent(value = "Welcome!")
             Spacer(modifier = Modifier.height(20.dp))
 
 

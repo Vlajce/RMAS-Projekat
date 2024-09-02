@@ -35,7 +35,6 @@ fun MainApp() {
         factory =  UserViewModelFactory(firebaseRepo)
     )
 
-
     val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
 
     NavHost(navController = navController, if(isUserLoggedIn) "main_screen" else "login") {
