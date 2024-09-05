@@ -96,6 +96,22 @@ class FirebaseRepo {
             }
     }
 
+    fun getUserById(userId: String, onResult: (User?) -> Unit) {
+        val userDocRef = db.collection("users").document(userId)
+        userDocRef.get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val user = document.toObject(User::class.java)
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
     fun addObject(
         title: String,
         subject: String,

@@ -169,7 +169,7 @@ fun ObjectDetailsScreen(navController: NavHostController, objectViewModel: Objec
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Average Rating: ${mapObject?.rating ?: "No ratings yet"}",
+                    text = "Average Rating: ${mapObject?.rating?.let { String.format("%.2f", it) } ?: "No ratings yet"}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Start)

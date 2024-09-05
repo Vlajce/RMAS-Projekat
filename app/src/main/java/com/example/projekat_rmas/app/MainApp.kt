@@ -45,7 +45,7 @@ fun MainApp() {
             LoginScreen(navController, viewModel = authViewModel)
         }
         composable("main_screen") {
-            MainScreen(navController, authViewModel)
+            MainScreen(navController, authViewModel, userViewModel)
         }
         composable("map_screen") {
             MapScreen(navController, objectViewModel)
@@ -60,7 +60,6 @@ fun MainApp() {
             val objectId = backStackEntry.arguments?.getString("objectId") ?: return@composable //kao provera, ako se ne dobiej objectID kod se prekida ali ne dolazi do greske
             ObjectDetailsScreen(navController, objectViewModel,userViewModel, objectId)
         }
-
     }
 }
 

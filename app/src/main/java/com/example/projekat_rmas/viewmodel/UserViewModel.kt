@@ -15,6 +15,17 @@ class UserViewModel(private val firebaseRepo: FirebaseRepo) : ViewModel() {
     var userState by mutableStateOf<UserState>(UserState.Idle)
         private set
 
+    var currentUser by mutableStateOf<User?>(null)
+
+    fun getCurrentUser() {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserId != null) {
+            firebaseRepo.getUserById(currentUserId) { user ->
+                currentUser = user
+            }
+        }
+    }
+
     fun updateOwnerPoints(ownerId: String, pointsToAdd: Int) {
         viewModelScope.launch {
             firebaseRepo.updateOwnerPoints(ownerId, pointsToAdd)
@@ -31,7 +42,6 @@ class UserViewModel(private val firebaseRepo: FirebaseRepo) : ViewModel() {
             }
         }
     }
-
 
     fun getUserRatingForObject(objectId: String, onResult: (Int?) -> Unit) {
         val currentUser = FirebaseAuth.getInstance().currentUser

@@ -174,7 +174,7 @@ fun TableRow(mapObject: MapObject) {
             textAlign = TextAlign.Center
         )
         Text(
-            text = mapObject.rating.toString(),
+            text = String.format("%.2f", mapObject.rating),
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold

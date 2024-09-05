@@ -33,10 +33,11 @@ import com.example.projekat_rmas.service.LocationService
 import com.example.projekat_rmas.viewmodel.AuthViewModel
 import com.example.projekat_rmas.viewmodel.NotificationViewModel
 import com.example.projekat_rmas.viewmodel.NotificationViewModelFactory
+import com.example.projekat_rmas.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
+fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel, userViewModel: UserViewModel) {
     val context = LocalContext.current
     var permissionsRequested by remember { mutableStateOf(false) }
 
@@ -56,18 +57,35 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
             permissionsRequested = true
         }
     }
+    /*LaunchedEffect(Unit) {
+        userViewModel.getCurrentUser()
+    }*/
+
 
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
             notificationViewModel.setNotificationEnabled(false)
             LocationService.stopLocationService(context)
         }
+
+        userViewModel.getCurrentUser()
     }
+
+    val currentUser = userViewModel.currentUser
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${currentUser?.username ?: "User"}",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )}
+                    },
                 actions = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Logout", style = MaterialTheme.typography.titleLarge, color = Color.White)
